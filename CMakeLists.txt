@@ -225,156 +225,6 @@ add_library(lpeg STATIC ${LPEG_SRC})
 target_include_directories(lpeg PRIVATE ${LUA_DIR})
 
 ################################
-# WREN
-################################
-
-set(WREN_DIR ${THIRDPARTY_DIR}/wren/src)
-set(WREN_SRC
-    ${WREN_DIR}/optional/wren_opt_meta.c
-    ${WREN_DIR}/optional/wren_opt_random.c
-    ${WREN_DIR}/vm/wren_compiler.c
-    ${WREN_DIR}/vm/wren_core.c
-    ${WREN_DIR}/vm/wren_debug.c
-    ${WREN_DIR}/vm/wren_primitive.c
-    ${WREN_DIR}/vm/wren_utils.c
-    ${WREN_DIR}/vm/wren_value.c
-    ${WREN_DIR}/vm/wren_vm.c
-)
-
-add_library(wren STATIC ${WREN_SRC})
-target_include_directories(wren PUBLIC ${THIRDPARTY_DIR}/wren/src/include)
-target_include_directories(wren PRIVATE ${THIRDPARTY_DIR}/wren/src/optional)
-target_include_directories(wren PRIVATE ${THIRDPARTY_DIR}/wren/src/vm)
-
-################################
-# MRUBY
-################################
-
-find_program(RUBY ruby)
-find_program(RAKE rake)
-if(NOT RAKE)
-    set(BUILD_WITH_MRUBY_DEFAULT FALSE)
-else()
-    set(BUILD_WITH_MRUBY_DEFAULT TRUE)
-endif()
-option(BUILD_WITH_MRUBY "mruby Enabled" ${BUILD_WITH_MRUBY_DEFAULT})
-message("BUILD_WITH_MRUBY: ${BUILD_WITH_MRUBY}")
-
-if(BUILD_WITH_MRUBY)
-    set(MRUBY_BUILDDIR ${CMAKE_SOURCE_DIR}/build/mruby)
-    set(MRUBY_DIR ${THIRDPARTY_DIR}/mruby)
-    if(ANDROID)
-        set(MRUBY_CONFIG ${MRUBY_BUILDDIR}/tic_android.rb)
-    else()
-        set(MRUBY_CONFIG ${MRUBY_BUILDDIR}/tic_default.rb)
-    endif()
-    set(MRUBY_LIB ${MRUBY_DIR}/build/target/lib/libmruby.a)
-
-    if(MSVC)
-        set(MRUBY_TOOLCHAIN visualcpp)
-    elseif(APPLE OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(MRUBY_TOOLCHAIN clang)
-    else()
-        set(MRUBY_TOOLCHAIN gcc)
-    endif()
-
-    if(APPLE)
-        exec_program(xcrun ARGS --sdk macosx --show-sdk-path OUTPUT_VARIABLE MRUBY_SYSROOT)
-    endif()
-
-    if(ANDROID_NDK_HOME)
-        set(MRUBY_RAKE_EXTRA_OPTS "${MRUBY_RAKE_EXTRA_OPTS} ANDROID_NDK_HOME=${ANDROID_NDK_HOME}")
-    endif()
-
-    ExternalProject_Add(mruby_vendor
-        SOURCE_DIR         ${MRUBY_DIR}
-        CONFIGURE_COMMAND  ""
-        BUILD_IN_SOURCE    TRUE
-        BUILD_COMMAND
-            ${RAKE} clean all "MRUBY_CONFIG=${MRUBY_CONFIG}"
-                "TARGET_CC=\"${CMAKE_C_COMPILER}\""
-                "TARGET_AR=\"${CMAKE_AR}\""
-                "TARGET_CFLAGS=${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${BUILD_TYPE_UC}}"
-                "TARGET_LDFLAGS=${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_LINKER_FLAGS_${BUILD_TYPE_UC}}"
-                "BUILD_TYPE=${BUILD_TYPE_UC}"
-                "MRUBY_SYSROOT=${MRUBY_SYSROOT}"
-                "MRUBY_TOOLCHAIN=${MRUBY_TOOLCHAIN}"
-                "ANDROID_ARCH=${CMAKE_ANDROID_ARCH_ABI}"
-                "ANDROID_PLATFORM=android-${CMAKE_SYSTEM_VERSION}"
-                ${MRUBY_RAKE_EXTRA_OPTS}
-        INSTALL_COMMAND    ""
-        BUILD_BYPRODUCTS   ${MRUBY_LIB}
-    )
-
-    add_library(mruby STATIC IMPORTED GLOBAL)
-    set_property(TARGET mruby APPEND
-        PROPERTY IMPORTED_LOCATION              ${MRUBY_LIB}
-    )
-    set_property(TARGET mruby APPEND
-        PROPERTY INTERFACE_INCLUDE_DIRECTORIES  ${MRUBY_DIR}/include
-    )
-    add_dependencies(mruby mruby_vendor)
-endif()
-
-################################
-# WASM
-################################
-
-set(WASM_DIR ${THIRDPARTY_DIR}/wasm3/source)
-set(WASM_SRC 
-    ${WASM_DIR}/m3_bind.c
-    ${WASM_DIR}/m3_code.c
-    ${WASM_DIR}/m3_compile.c
-    ${WASM_DIR}/m3_core.c
-    ${WASM_DIR}/m3_parse.c
-    ${WASM_DIR}/m3_env.c
-    ${WASM_DIR}/m3_exec.c
-    ${WASM_DIR}/m3_function.c
-    ${WASM_DIR}/m3_info.c
-    ${WASM_DIR}/m3_module.c
-)
-
-add_library(wasm STATIC ${WASM_SRC})
-target_include_directories(wasm PUBLIC ${THIRDPARTY_DIR}/wasm3/source)
-#target_include_directories(wasm PRIVATE ${THIRDPARTY_DIR}/wasm3/src/optional)
-#target_include_directories(wasm PRIVATE ${THIRDPARTY_DIR}/wasm3/src/vm)
-
-
-################################
-# SQUIRREL
-################################
-
-set(SQUIRREL_DIR ${THIRDPARTY_DIR}/squirrel)
-set(SQUIRREL_SRC
-    ${SQUIRREL_DIR}/squirrel/sqapi.cpp
-    ${SQUIRREL_DIR}/squirrel/sqbaselib.cpp
-    ${SQUIRREL_DIR}/squirrel/sqclass.cpp
-    ${SQUIRREL_DIR}/squirrel/sqcompiler.cpp
-    ${SQUIRREL_DIR}/squirrel/sqdebug.cpp
-    ${SQUIRREL_DIR}/squirrel/sqfuncstate.cpp
-    ${SQUIRREL_DIR}/squirrel/sqlexer.cpp
-    ${SQUIRREL_DIR}/squirrel/sqmem.cpp
-    ${SQUIRREL_DIR}/squirrel/sqobject.cpp
-    ${SQUIRREL_DIR}/squirrel/sqstate.cpp
-    ${SQUIRREL_DIR}/squirrel/sqtable.cpp
-    ${SQUIRREL_DIR}/squirrel/sqvm.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdaux.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdblob.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdio.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdmath.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdrex.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdstream.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdstring.cpp
-    ${SQUIRREL_DIR}/sqstdlib/sqstdsystem.cpp
-)
-
-add_library(squirrel STATIC ${SQUIRREL_SRC})
-set_target_properties(squirrel PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(squirrel PUBLIC ${SQUIRREL_DIR}/include)
-target_include_directories(squirrel PRIVATE ${SQUIRREL_DIR}/squirrel)
-target_include_directories(squirrel PRIVATE ${SQUIRREL_DIR}/sqstdlib)
-
-################################
 # GIFLIB
 ################################
 
@@ -401,13 +251,6 @@ add_library(blipbuf STATIC ${THIRDPARTY_DIR}/blip-buf/blip_buf.c)
 target_include_directories(blipbuf INTERFACE ${THIRDPARTY_DIR}/blip-buf)
 
 ################################
-# Duktape
-################################
-
-add_library(duktape STATIC ${THIRDPARTY_DIR}/duktape/src/duktape.c)
-target_include_directories(duktape INTERFACE ${THIRDPARTY_DIR}/duktape/src)
-
-################################
 # TIC-80 core
 ################################
 
@@ -420,14 +263,7 @@ macro(MACRO_CORE SCRIPT DEFINE BUILD_DEPRECATED)
         ${TIC80CORE_DIR}/core/draw.c
         ${TIC80CORE_DIR}/core/io.c
         ${TIC80CORE_DIR}/core/sound.c
-        ${TIC80CORE_DIR}/api/js.c
         ${TIC80CORE_DIR}/api/lua.c 
-        ${TIC80CORE_DIR}/api/moonscript.c 
-        ${TIC80CORE_DIR}/api/fennel.c 
-        ${TIC80CORE_DIR}/api/wren.c 
-        ${TIC80CORE_DIR}/api/wasm.c
-        ${TIC80CORE_DIR}/api/squirrel.c
-        ${TIC80CORE_DIR}/api/mruby.c
         ${TIC80CORE_DIR}/tic.c
         ${TIC80CORE_DIR}/cart.c
         ${TIC80CORE_DIR}/tools.c
@@ -446,9 +282,6 @@ macro(MACRO_CORE SCRIPT DEFINE BUILD_DEPRECATED)
     endif()
 
     target_include_directories(tic80core${SCRIPT}
-        PRIVATE
-            ${THIRDPARTY_DIR}/moonscript
-            ${THIRDPARTY_DIR}/fennel
         PUBLIC
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/src)
@@ -456,17 +289,9 @@ macro(MACRO_CORE SCRIPT DEFINE BUILD_DEPRECATED)
     target_link_libraries(tic80core${SCRIPT}
         lua 
         lpeg 
-        wren 
-        wasm 
-        squirrel 
-        duktape 
         blipbuf 
         zlib
     )
-
-    if(BUILD_WITH_MRUBY)
-        target_link_libraries(tic80core${SCRIPT} mruby)
-    endif()
 
     if(${BUILD_DEPRECATED})
         target_compile_definitions(tic80core${SCRIPT} PRIVATE BUILD_DEPRECATED)
@@ -486,20 +311,7 @@ MACRO_CORE("" "" TRUE)
 if(BUILD_STUB)
 
     MACRO_CORE(lua      TIC_BUILD_WITH_LUA      FALSE)
-    MACRO_CORE(moon     TIC_BUILD_WITH_MOON     FALSE)
-    MACRO_CORE(fennel   TIC_BUILD_WITH_FENNEL   FALSE)
-    MACRO_CORE(js       TIC_BUILD_WITH_JS       FALSE)
-    MACRO_CORE(wren     TIC_BUILD_WITH_WREN     FALSE)
-    MACRO_CORE(squirrel TIC_BUILD_WITH_SQUIRREL FALSE)
-    if(BUILD_WITH_MRUBY)
-        MACRO_CORE(ruby TIC_BUILD_WITH_MRUBY    FALSE)
-    endif()
-    MACRO_CORE(wasm     TIC_BUILD_WITH_WASM     FALSE)
 
-endif()
-
-if(BUILD_WITH_MRUBY)
-    target_compile_definitions(tic80core PUBLIC TIC_BUILD_WITH_MRUBY=1)
 endif()
 
 ################################
@@ -649,11 +461,11 @@ IS_DOS
         if("${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoWii" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "NintendoGameCube" OR GAMECUBE OR WII OR IS_DOS)
           add_custom_command(TARGET tic80_libretro
                POST_BUILD
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/libretro/merge_static.sh $(AR) ${CMAKE_BINARY_DIR}/lib/tic80_libretro${LIBRETRO_SUFFIX}.${LIBRETRO_EXTENSION} ${CMAKE_BINARY_DIR}/lib/tic80_libretro_partial.a ${CMAKE_BINARY_DIR}/lib/libtic80core.a ${CMAKE_BINARY_DIR}/lib/liblua.a ${CMAKE_BINARY_DIR}/lib/libblipbuf.a ${CMAKE_BINARY_DIR}/lib/libduktape.a ${CMAKE_BINARY_DIR}/lib/libwren.a ${CMAKE_BINARY_DIR}/lib/libwasm.a ${CMAKE_BINARY_DIR}/lib/libsquirrel.a ${CMAKE_BINARY_DIR}/lib/libgiflib.a ${CMAKE_BINARY_DIR}/lib/liblpeg.a ${CMAKE_BINARY_DIR}/lib/libzlib.a ${MRUBY_LIB})
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/libretro/merge_static.sh $(AR) ${CMAKE_BINARY_DIR}/lib/tic80_libretro${LIBRETRO_SUFFIX}.${LIBRETRO_EXTENSION} ${CMAKE_BINARY_DIR}/lib/tic80_libretro_partial.a ${CMAKE_BINARY_DIR}/lib/libtic80core.a ${CMAKE_BINARY_DIR}/lib/liblua.a ${CMAKE_BINARY_DIR}/lib/libblipbuf.a ${CMAKE_BINARY_DIR}/lib/libgiflib.a ${CMAKE_BINARY_DIR}/lib/liblpeg.a ${CMAKE_BINARY_DIR}/lib/libzlib.a )
         else()
           add_custom_command(TARGET tic80_libretro
                POST_BUILD
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/libretro/merge_static.sh $(AR) ${CMAKE_BINARY_DIR}/lib/tic80_libretro${LIBRETRO_SUFFIX}.${LIBRETRO_EXTENSION} ${CMAKE_BINARY_DIR}/lib/tic80_libretro_partial.a ${CMAKE_BINARY_DIR}/lib/libtic80core.a ${CMAKE_BINARY_DIR}/lib/liblua.a ${CMAKE_BINARY_DIR}/lib/libblipbuf.a ${CMAKE_BINARY_DIR}/lib/libduktape.a ${CMAKE_BINARY_DIR}/lib/libwren.a ${CMAKE_BINARY_DIR}/lib/libwasm.a ${CMAKE_BINARY_DIR}/lib/libsquirrel.a ${CMAKE_BINARY_DIR}/lib/libgiflib.a ${CMAKE_BINARY_DIR}/lib/liblpeg.a ${MRUBY_LIB})
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/libretro/merge_static.sh $(AR) ${CMAKE_BINARY_DIR}/lib/tic80_libretro${LIBRETRO_SUFFIX}.${LIBRETRO_EXTENSION} ${CMAKE_BINARY_DIR}/lib/tic80_libretro_partial.a ${CMAKE_BINARY_DIR}/lib/libtic80core.a ${CMAKE_BINARY_DIR}/lib/liblua.a ${CMAKE_BINARY_DIR}/lib/libblipbuf.a ${CMAKE_BINARY_DIR}/lib/libgiflib.a ${CMAKE_BINARY_DIR}/lib/liblpeg.a )
         endif()
     else()
         add_library(tic80_libretro SHARED
@@ -1240,13 +1052,6 @@ if(BUILD_STUB)
     endmacro()
 
     MACRO_STUB(lua)
-    MACRO_STUB(moon)
-    MACRO_STUB(fennel)
-    MACRO_STUB(js)
-    MACRO_STUB(wren)
-    MACRO_STUB(squirrel)
-    MACRO_STUB(ruby)
-    MACRO_STUB(wasm)
 
 endif()
 

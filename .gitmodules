@@ -6,10 +6,6 @@
 	path = vendor/dirent
 	url = https://github.com/tronkko/dirent.git
 	shallow = true
-[submodule "vendor/duktape"]
-	path = vendor/duktape
-	url = https://github.com/svaarala/duktape-releases.git
-	shallow = true
 [submodule "vendor/giflib"]
 	path = vendor/giflib
 	url = https://github.com/nesbox/giflib.git
@@ -30,14 +26,6 @@
 	path = vendor/sokol
 	url = https://github.com/floooh/sokol.git
 	shallow = true
-[submodule "vendor/squirrel"]
-	path = vendor/squirrel
-	url = https://github.com/albertodemichelis/squirrel.git
-	shallow = true
-[submodule "vendor/wren"]
-	path = vendor/wren
-	url = https://github.com/wren-lang/wren.git
-	shallow = true
 [submodule "vendor/zlib"]
 	path = vendor/zlib
 	url = https://github.com/madler/zlib.git
@@ -45,10 +33,6 @@
 [submodule "vendor/zip"]
 	path = vendor/zip
 	url = https://github.com/kuba--/zip.git
-	shallow = true
-[submodule "vendor/moonscript"]
-	path = vendor/moonscript
-	url = https://github.com/nesbox/moonscript.git
 	shallow = true
 [submodule "vendor/argparse"]
 	path = vendor/argparse
@@ -73,9 +57,3 @@
 [submodule "vendor/sdl2"]
 	path = vendor/sdl2
 	url = https://github.com/libsdl-org/SDL.git
-[submodule "mruby"]
-	path = vendor/mruby
-	url = https://github.com/mruby/mruby.git
-[submodule "vendor/wasm3"]
-	path = vendor/wasm3
-	url = https://github.com/wasm3/wasm3.git
